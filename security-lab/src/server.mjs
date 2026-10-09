@@ -1,6 +1,7 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { WebSocketServer, WebSocket } from 'ws';
+import { fileURLToPath } from 'node:url';
 import { PluginHost, resolvePluginNames } from './plugins.mjs';
 
 const VERSION = 'lab-v1';
@@ -69,7 +70,7 @@ export async function startServer(config = {}) {
   const options = {
     host: '127.0.0.1', port: 8765, playerToken: process.env.ISTROLIDR_TEST_TOKEN,
     testerToken: process.env.ISTROLIDR_TEST_ADMIN_TOKEN, allowLan: false,
-    pluginNames: [], pluginDirectory: new URL('../plugins/', import.meta.url).pathname,
+    pluginNames: [], pluginDirectory: fileURLToPath(new URL('../plugins/', import.meta.url)),
     audit: () => {}, ...config
   };
   assertConfig(options);
