@@ -62,7 +62,7 @@ export async function startNativeServer({
       players:[...clients.values()].filter(x=>x.authenticated).map(x=>x.name),state:'waiting'}];
   }
   function notifyRoots(){for(const r of roots.values())json(r.ws,'servers',serverList());}
-  let nextNumber=0;
+  let nextNumber=0, nextBattleNumber=0;
   wss.on('connection',(ws,route)=>{
     const session={ws,id:randomUUID(),route,authenticated:false};
     record('connect',session,route);
@@ -128,7 +128,7 @@ export async function startNativeServer({
         }
         if(session.authenticated){ws.close(1008,'Duplicate gameKey');return;}
         session.authenticated=true;session.name=name;session.side='spectators';
-        session.number=[...clients.values()].filter(s=>s.authenticated&&s!==session).length;
+        session.number=nextBattleNumber++;
         session.color=Array.isArray(session.playerJoin.color)&&session.playerJoin.color.length===4?
           session.playerJoin.color:[100,180,250,255];
         clearTimeout(timeout);record('join',session);
