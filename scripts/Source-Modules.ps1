@@ -48,7 +48,19 @@ if ($ExportDirectory) {
         [IO.File]::WriteAllText($dest, $section.Content, $utf8)
     }
     $manifest = @($sections | ForEach-Object {
-        [pscustomobject]@{ path = $_.Name; source_line = $_.StartLine }
+        $data = $utf8.GetBytes($_.Content)
+        $sha = [Security.Cryptography.SHA256]::Create()
+        try {
+            $digest = [BitConverter]::ToString($sha.ComputeHash($data)).Replace('-', '').ToLowerInvariant()
+        } finally {
+            $sha.Dispose()
+        }
+        [pscustomobject]@{
+            path = $_.Name
+            source_line = $_.StartLine
+            bytes = $data.Length
+            sha256 = $digest
+        }
     }) | ConvertTo-Json -Depth 3
     [IO.File]::WriteAllText((Join-Path $exportRoot '_source-map.json'), $manifest, $utf8)
     Write-Host ("Exported {0} original source sections to {1}" -f $sections.Count, $exportRoot)
