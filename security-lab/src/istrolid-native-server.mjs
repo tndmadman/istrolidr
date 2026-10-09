@@ -116,10 +116,10 @@ export async function startNativeServer({
           !ARRAY_COMMANDS.has(msg[0])){record('reject',session,'BAD_COMMAND');ws.close(1008,'Invalid command');return;}
       const name=msg[0],args=msg.slice(1);
       if(name==='playerJoin'){
-        if(args.length<6||args.length>7||!nick(args[2])||!Array.isArray(args[4])||args[4].length!==10){
+        if(args.length<6||args.length>7||!nick(args[1])||!Array.isArray(args[3])||args[3].length!==10){
           record('reject',session,'BAD_JOIN');ws.close(1008,'Invalid join');return;
         }
-        session.playerJoin={id:args[1],name:args[2],color:args[3],buildBar:args[4]};
+        session.playerJoin={id:args[0],name:args[1],color:args[2],buildBar:args[3]};
       }else if(name==='gameKey'){
         const [name,key]=args,root=roots.get(key);
         if(!root||!equal(root.key,key)||root.name!==name||!session.playerJoin||
