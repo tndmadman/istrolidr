@@ -12,6 +12,7 @@ Copy-Item -LiteralPath (Join-Path $sourceRepo 'scripts/Build-And-Run.ps1') -Dest
 Copy-Item -LiteralPath (Join-Path $sourceRepo 'scripts/Extract-Asar.ps1') -Destination (Join-Path $project 'scripts')
 Copy-Item -LiteralPath (Join-Path $sourceRepo 'scripts/Source-Modules.ps1') -Destination (Join-Path $project 'scripts')
 Copy-Item -LiteralPath (Join-Path $sourceRepo 'scripts/Apply-Offline.ps1') -Destination (Join-Path $project 'scripts')
+Copy-Item -LiteralPath (Join-Path $sourceRepo 'scripts/Apply-Private-Client.ps1') -Destination (Join-Path $project 'scripts')
 $files = @(
     @{ Path = 'main.js'; Bytes = [Text.Encoding]::UTF8.GetBytes('console.log("main")') },
     @{ Path = 'preload.js'; Bytes = [Text.Encoding]::UTF8.GetBytes('console.log("preload")') },
@@ -124,6 +125,7 @@ console.log("atlas");
     $offlineMainFixture = @'
 (function() {
   app = electron.app;
+  track = function(name, ops) { return 1; };
   Menu = electron.Menu;
   process.on("uncaughtException", function() {
     return track("electron_error", {message: "boom"});
@@ -166,6 +168,18 @@ console.log("atlas");
         $mainNormal.Contains('ISTROLIDR_OFFLINE')) {
         throw 'Switching from offline back to normal did not restore original startup.'
     }
+
+    # Test the new private server launcher against a synthetic main.js.
+    & (Join-Path $project 'scripts/Build-And-Run.ps1') -GameDir $game -PrivateServer -BuildOnly
+    $mainPrivate = [IO.File]::ReadAllText((Join-Path $app 'main.js'))
+    foreach ($expected in @('ISTROLIDR_PRIVATE', 'istrolidr-private', 'onBeforeRequest', '127\\.0\\.0\\.1')) {
+        if (-not $mainPrivate.Contains($expected)) { throw "Missing private-server protection: $expected" }
+    }
+    & (Join-Path $project 'scripts/Build-And-Run.ps1') -GameDir $game -BuildOnly
+    if ([IO.File]::ReadAllText((Join-Path $app 'main.js')).Contains('ISTROLIDR_PRIVATE')) {
+        throw 'Disabling PrivateServer did not restore original main.js.'
+    }
+    Write-Host 'PASS: private server isolation and normal-build restoration'
 
     # Unknown client version must fail BEFORE any offline file is written.
     $bad = Join-Path $project 'bad-client'
