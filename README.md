@@ -6,7 +6,7 @@
 
 1. Install the free original Istrolid through Steam.
 2. Clone this repository: `git clone https://github.com/tndmadman/istrolidr.git`
-3. Double-click **`Run-Istrolid.cmd`**. First run extracts the *local* official `resources/app.asar` into an isolated `.build/IstrolidR/resources/app` folder, copies the Electron runtime DLLs/executable, applies Git-tracked `overrides/`, then launches the resulting client. Subsequent runs are incremental.
+3. Double-click **`Run-Istrolid.cmd`**. First run extracts the *local* official `resources/app.asar` into an isolated `.build/Istrolid/resources/app` folder, copies the Electron runtime DLLs/executable, applies Git-tracked `overrides/`, then launches the resulting client. Subsequent runs are incremental.
 
 No npm, C++ compiler, Visual Studio, or Python is needed; Windows PowerShell 5.1 is included with Windows 10.
 
@@ -20,7 +20,27 @@ Or set environment variable `ISTROLID_GAME_DIR` to your installed game's folder.
 
 The original Steam installation is **not modified**. `.build/` is ignored by Git.
 
-## Edit an individual game system
+**Runtime folder name:** `.build/Istrolid/` is intentional. The original game's preload script derives its working directory using the exact word `Istrolid`. Older `.build/IstrolidR/` staging directories can be safely deleted after updating.
+
+## One-click offline sandbox (opt-in)
+
+**Double-click `Run-Offline.cmd`**. It prepares a local, isolated sandbox and opens the game's **local battle room** automatically. You can use local ships and AI without signing into the original root server.
+
+Offline mode includes:
+- A separate Electron `userData` profile (your official online login and saved data remain untouched).
+- A local guest commander and local `Sim` / `Local` connection, instead of a root WebSocket.
+- Disabled renderer telemetry and disabled main-process crash-report HTTP submissions.
+- Electron browser request blocking for remote HTTP, HTTPS and WebSocket traffic; local `file://` assets still load.
+- A guarded patch: unknown upstream source changes stop the build instead of blindly replacing code.
+
+**Limitations:** Multiplayer, account syncing, leaderboards and other server-dependent features are unavailable offline. The original app can still open an external browser link if you click one; offline mode blocks its in-game network requests, not your entire computer. This is **not a verified full air-gap guarantee** or a replacement for an OS firewall. Login and behavior must be checked on a machine with the original game installed.
+
+To switch back to the normal build, run `Run-Istrolid.cmd`. The build stamp tracks offline/normal mode and restores the original online network code when switching. The official Steam install is never modified. While offline, local saves use the isolated profile.
+
+If a future game update changes the expected function names, the offline patch will fail with an explanatory message; inspect the new source instead of loosening those checks.
+
+## Edit a game system
+
 
 **You no longer need to edit the entire 1.72 MB combined JavaScript bundle.**
 
@@ -42,7 +62,7 @@ Place modified or new files under `overrides/` mirroring their paths in the game
 
 Double-click `Run-Istrolid.cmd` to apply the overrides and launch. Commit only independently authored files or files that you have permission to redistribute. Original unpacked assets and game code stay local in `.build/`.
 
-The original assembled bundle is at `.build/IstrolidR/resources/app/js/istrolid.cat.js`. Extracted modules and their `_source-map.json` are at `.build/sources/`. See [docs/SYSTEMS.md](docs/SYSTEMS.md) for the first source-backed game architecture map, and `RESEARCH.md` for the roadmap.
+The original assembled bundle is at `.build/Istrolid/resources/app/js/istrolid.cat.js`. Extracted modules and their `_source-map.json` are at `.build/sources/`. See [docs/SYSTEMS.md](docs/SYSTEMS.md) for the first source-backed game architecture map, and `RESEARCH.md` for the roadmap.
 
 ## What “build” means
 
