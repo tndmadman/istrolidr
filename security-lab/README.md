@@ -1,11 +1,51 @@
-# IstrolidR Server Security Lab
+# IstrolidR: native private server and security lab
 
-A local test server for developing custom server-side security checks against **servers you control**. This is not a playable Istrolid dedicated server: the lab currently speaks its own JSON protocol (lab-v1), **not** the original game's zJson binary protocol. The original game client will not connect to this server unchanged.
+**Native Istrolid root and ZJson battle transport are implemented.** The recovered 2023 client and native test server now agree on the binary encoding, packet dictionary, root JSON message shapes, gameKey exchange and lobby snapshots.
+
+**Important:** gameplay is still incomplete: this is a real native-protocol **lobby**, not yet a fully playable, authoritative combat server. Commands that require ship simulation are not applied. Do not mistake a successful connection for complete multiplayer support.
+
+## Start a native Istrolid private test server
+
+1. Install the official Istrolid client and Node.js 20+.
+2. Double-click **Run-Security-Lab.cmd** from the repository root. It uses Build-Only.cmd to extract the locally installed client's exact ZJson word table and launches the native test server on 127.0.0.1:8765.
+3. Double-click **Run-Private-Client.cmd** to start an isolated client with rootAddress set to ws://127.0.0.1:8765/root and the room set to IstrolidR Test Room.
+4. Custom local plugin: Run-Security-Lab.cmd --plugin deny-move-orders.mjs
+5. Run-Security-Tests.cmd to exercise golden client wire packets, fake game keys, malformed inputs and existing security harness regressions.
+
+The client saves to a separate private development profile, with production HTTP and WebSocket requests blocked. **Start the test server before launching the private client.** Keep the test service bound to localhost.
+
+The original JSON-only test harness remains available with **Run-JSON-Test-Lab.cmd** and uses the separate lab-v1 protocol described below.
+
+## Protocol status
+
+| Feature | Status |
+|---|---|
+| Binary ZJson encode/decode, common strings and END framing | Implemented, tested against original client bytes |
+| Original client RootConnection JSON message names | Implemented for room discovery, gameKey and local guest login |
+| Original client Connection playerJoin and gameKey | Implemented with session/key validation |
+| Binary snapshot format and team selection | Implemented |
+| Separate local session and guest profile | Implemented |
+| Original server's authoritative Sim / ship build / combat | Not yet implemented |
+| Original game's full account services and public matchmaking | Not implemented |
+| TLS, hardened public dedicated server | Not implemented (localhost-only) |
+
+Every word-table string is loaded **locally** from your own app archive. No proprietary game code or assets are uploaded to the repository.
+
+## Security testing
+
+The native service rejects malformed ZJson packets, invalid game keys, unauthenticated battle commands, excessive message rates and unauthorized room configuration. It supports operator-installed trusted JavaScript plugins that can inspect/reject allowed game commands. Plugin workers are **not** an OS sandbox; never execute unknown/untrusted plugins. No remotely submitted JavaScript is executed.
+
+See [the repository research roadmap](../docs/SYSTEMS.md) and [issue #5](https://github.com/tndmadman/istrolidr/issues/5) for work toward a complete authoritative battle simulation.
+
+---
+
+## Legacy JSON-only protocol test harness
+
 
 ## Quick start (Windows)
 
 1. Install Node.js 20+.
-2. Double-click **Run-Security-Lab.cmd** in the repository root. It installs the pinned WebSocket dependency on first launch.
+2. Double-click **Run-JSON-Test-Lab.cmd** in the repository root. It installs the pinned WebSocket dependency on first launch.
 3. By default, the server binds to 127.0.0.1:8765 and prints a random player token in your local console.
 4. Double-click **Run-Security-Tests.cmd** to run the input-validation and abuse-regression tests.
 5. Logs appear under security-lab/.build/audit.jsonl (Git-ignored).
@@ -14,7 +54,7 @@ A local test server for developing custom server-side security checks against **
 
 Create security-lab/plugins/my-check.mjs exporting a function named onCommand(event). Enable it explicitly:
 
-    Run-Security-Lab.cmd --plugin my-check.mjs
+    Run-JSON-Test-Lab.cmd --plugin my-check.mjs
 
 The example plugin, security-lab/plugins/deny-unit-13.mjs, denies the fire command from test unit 13.
 

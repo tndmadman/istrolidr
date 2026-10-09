@@ -3,8 +3,10 @@ param(
     [string]$GameDir = $env:ISTROLID_GAME_DIR,
     [switch]$Clean,
     [switch]$BuildOnly,
-    [switch]$Offline
+    [switch]$Offline,
+    [switch]$PrivateServer
 )
+if ($Offline -and $PrivateServer) { throw 'Offline mode cannot be combined with PrivateServer' }
 $ErrorActionPreference = 'Stop'
 $project = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $project '.build\Istrolid'
@@ -96,6 +98,11 @@ $asarInfo = Get-Item -LiteralPath $asarPath
 $stampLines = New-Object 'System.Collections.Generic.List[string]'
 $stampLines.Add("asar:$($asarInfo.Length):$($asarInfo.LastWriteTimeUtc.Ticks)")
 $stampLines.Add(('offline:' + [string]$Offline.IsPresent))
+$stampLines.Add(('private:' + [string]$PrivateServer.IsPresent))
+if ($PrivateServer) {
+    $privatePatch = Join-Path $PSScriptRoot 'Apply-Private-Client.ps1'
+    $stampLines.Add(('private-patch:' + (Get-FileHash -LiteralPath $privatePatch -Algorithm SHA256).Hash))
+}
 if ($Offline) {
     $patchScript = Join-Path $PSScriptRoot 'Apply-Offline.ps1'
     $stampLines.Add(('offline-patch:' + (Get-FileHash -LiteralPath $patchScript -Algorithm SHA256).Hash))
@@ -151,6 +158,10 @@ if (($oldStamp -ne $stamp) -or -not (Test-Path -LiteralPath (Join-Path $appDir '
         Write-Host 'Applying isolated offline sandbox patch...'
         & (Join-Path $PSScriptRoot 'Apply-Offline.ps1') -ApplicationDir $stage
     }
+    if ($PrivateServer) {
+        Write-Host 'Applying private-client isolation and localhost networking...'
+        & (Join-Path $PSScriptRoot 'Apply-Private-Client.ps1') -ApplicationDir $stage
+    }
     foreach ($needed in @('package.json', 'main.js', 'preload.js', 'game.html', 'js\istrolid.cat.js', 'css\style.css')) {
         if (-not (Test-Path -LiteralPath (Join-Path $stage $needed) -PathType Leaf)) {
             throw "Missing critical game file after extraction: $needed"
@@ -168,7 +179,11 @@ $launchExe = Join-Path $build 'istrolid.exe'
 if (-not (Test-Path -LiteralPath $launchExe -PathType Leaf)) { throw "Missing Electron runtime: $launchExe" }
 if (-not $BuildOnly) {
     Write-Host 'Launching IstrolidR...'
-    Start-Process -FilePath $launchExe -WorkingDirectory $build
+    if ($PrivateServer) {
+        Start-Process -FilePath $launchExe -WorkingDirectory $build -ArgumentList '--rootAddress ws://127.0.0.1:8765/root --server "IstrolidR Test Room"'
+    } else {
+        Start-Process -FilePath $launchExe -WorkingDirectory $build
+    }
 } else {
     Write-Host "Build only. Launcher is at: $launchExe"
 }
