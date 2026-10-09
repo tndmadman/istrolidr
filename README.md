@@ -2,6 +2,17 @@
 
 **Status:** local Electron runtime bootstrapper, not a rewritten or open-source Istrolid game. It uses a locally installed official copy of [Istrolid on Steam](https://store.steampowered.com/app/449140/Istrolid/). No proprietary game code or assets are distributed by this repository.
 
+## Dedicated server security lab (experimental)
+
+The repository includes an independently authored **local WebSocket security-test server**. It accepts opt-in JavaScript plugins on the server for validating authentication, command authorization, abuse limits, protocol handling and replay protection. It does **not yet** support original Istrolid multiplayer clients or simulate battles.
+
+- Double-click **Run-Security-Lab.cmd** to start a localhost-only test server (requires Node.js 20+; first run installs its isolated WebSocket dependency).
+- Double-click **Run-Security-Tests.cmd** to run automated abuse-regression tests.
+- Add a trusted plugin to security-lab/plugins/ and explicitly load it by passing its filename, such as: Run-Security-Lab.cmd --plugin deny-unit-13.mjs
+- Test using your own clients over ws://127.0.0.1:8765/lab; see [security-lab/README.md](security-lab/README.md) for the JSON lab-v1 protocol, role tokens and examples.
+
+Only run server plugins you trust. This is **not** a network-accessible remote code executor: code is installed by the server operator, never accepted over the connection. Original production Istrolid services are not used.
+
 ## One-click Windows 10/11 run
 
 1. Install the free original Istrolid through Steam.
