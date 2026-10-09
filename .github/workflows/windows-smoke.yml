@@ -1,0 +1,13 @@
+name: Windows build smoke test
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise Windows PowerShell ASAR extractor and build overlay
+        shell: cmd
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\Test-Build.ps1
