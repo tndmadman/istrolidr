@@ -172,7 +172,7 @@ console.log("atlas");
     # Test the new private server launcher against a synthetic main.js.
     & (Join-Path $project 'scripts/Build-And-Run.ps1') -GameDir $game -PrivateServer -BuildOnly
     $mainPrivate = [IO.File]::ReadAllText((Join-Path $app 'main.js'))
-    foreach ($expected in @('ISTROLIDR_PRIVATE', 'istrolidr-private', 'onBeforeRequest', '127\\.0\\.0\\.1')) {
+    foreach ($expected in @('ISTROLIDR_PRIVATE', 'istrolidr-private', 'onBeforeRequest', 'callback({cancel:!allowed})')) {
         if (-not $mainPrivate.Contains($expected)) { throw "Missing private-server protection: $expected" }
     }
     & (Join-Path $project 'scripts/Build-And-Run.ps1') -GameDir $game -BuildOnly
