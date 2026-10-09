@@ -8,7 +8,7 @@
 
 1. Double-click **Run-Security-Lab.cmd** to start the native root and battle server on localhost (requires Node.js 20+).
 2. Double-click **Run-Private-Client.cmd** to launch a separate game profile redirected to your local test server.
-3. Optionally load custom trusted server code with `Run-Security-Lab.cmd --plugin deny-unit-13.mjs`.
+3. Optionally load custom trusted server code with `Run-Security-Lab.cmd --plugin deny-move-orders.mjs`.
 4. Run **Run-Security-Tests.cmd** to test byte-for-byte ZJson compatibility, authentication, replay and malformed packet handling.
 
 **What works:** original-client root JSON framing, game server discovery, game keys, binary joining, lobby snapshots and side selection. **What does not yet work:** full ship simulation, authoritative combat, persistent accounts and public multiplayer. No original game code/assets are hosted by this repo; see [security-lab/README.md](security-lab/README.md).
