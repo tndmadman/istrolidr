@@ -1,0 +1,11 @@
+# Reconstructed runtime (includes third-party proprietary game code/assets)
+.build/
+# Original game source/assets belong to their creators and are not redistributed here.
+original/
+recovered/
+*.asar
+*.asar.unpacked/
+*.exe
+*.dll
+node_modules/
+*.log
