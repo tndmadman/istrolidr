@@ -102,6 +102,16 @@ if (Test-Path -LiteralPath $overlay -PathType Container) {
         $stampLines.Add(('{0}:{1}' -f $relative, $hash))
     }
 }
+$modules = Join-Path $project 'modules'
+if (Test-Path -LiteralPath $modules -PathType Container) {
+    foreach ($file in Get-ChildItem -LiteralPath $modules -Recurse -File -Filter '*.js' | Sort-Object FullName) {
+        $relative = $file.FullName.Substring($modules.Length).TrimStart([char[]]@('\', '/'))
+        $hash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
+        $stampLines.Add(('module:{0}:{1}' -f $relative, $hash))
+    }
+}
+$moduleTool = Join-Path $PSScriptRoot 'Source-Modules.ps1'
+$stampLines.Add(('module-tool:' + (Get-FileHash -LiteralPath $moduleTool -Algorithm SHA256).Hash))
 $stamp = ($stampLines -join [Environment]::NewLine)
 $stampFile = Join-Path $build '.build-stamp'
 $appDir = Join-Path $buildResources 'app'
@@ -121,6 +131,14 @@ if (($oldStamp -ne $stamp) -or -not (Test-Path -LiteralPath (Join-Path $appDir '
             $target = Join-Path $stage $relative
             [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($target)) | Out-Null
             Copy-Item -LiteralPath $file.FullName -Destination $target -Force
+        }
+    }
+    if (Test-Path -LiteralPath $modules -PathType Container) {
+        $hasModules = @(Get-ChildItem -LiteralPath $modules -Recurse -File -Filter '*.js').Count -gt 0
+        if ($hasModules) {
+            $bundle = Join-Path $stage 'js\istrolid.cat.js'
+            Write-Host 'Applying individual JavaScript module overrides...'
+            & $moduleTool -Bundle $bundle -ModulesDirectory $modules -OutputBundle $bundle
         }
     }
     foreach ($needed in @('package.json', 'main.js', 'preload.js', 'game.html', 'js\istrolid.cat.js', 'css\style.css')) {
