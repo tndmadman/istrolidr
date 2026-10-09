@@ -9,7 +9,7 @@
 1. Install the official Istrolid client and Node.js 20+.
 2. Double-click **Run-Security-Lab.cmd** from the repository root. It uses Build-Only.cmd to extract the locally installed client's exact ZJson word table and launches the native test server on 127.0.0.1:8765.
 3. Double-click **Run-Private-Client.cmd** to start an isolated client with rootAddress set to ws://127.0.0.1:8765/root and the room set to IstrolidR Test Room.
-4. Custom local plugin: Run-Security-Lab.cmd --plugin deny-unit-13.mjs
+4. Custom local plugin: Run-Security-Lab.cmd --plugin deny-move-orders.mjs
 5. Run-Security-Tests.cmd to exercise golden client wire packets, fake game keys, malformed inputs and existing security harness regressions.
 
 The client saves to a separate private development profile, with production HTTP and WebSocket requests blocked. **Start the test server before launching the private client.** Keep the test service bound to localhost.
