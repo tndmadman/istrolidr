@@ -24,7 +24,10 @@ function Find-Game([string]$requested) {
         }
     }
     foreach ($drive in @('C:', 'D:', 'E:', 'F:', 'G:')) {
-        $steamRoots.Add((Join-Path ($drive + '\') 'SteamLibrary'))
+        $rootDrive = $drive + '\'
+        if (Test-Path -LiteralPath $rootDrive -PathType Container) {
+            $steamRoots.Add((Join-Path $rootDrive 'SteamLibrary'))
+        }
     }
     $allLibraries = New-Object 'System.Collections.Generic.List[string]'
     foreach ($steam in $steamRoots) {
