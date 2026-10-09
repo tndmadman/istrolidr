@@ -1,0 +1,33 @@
+name: Security lab checks
+on:
+  push:
+    paths:
+      - 'security-lab/**'
+      - 'Run-Security-Lab.cmd'
+      - 'Run-Security-Tests.cmd'
+      - '.github/workflows/security-lab.yml'
+  pull_request:
+    paths:
+      - 'security-lab/**'
+      - 'Run-Security-Lab.cmd'
+      - 'Run-Security-Tests.cmd'
+      - '.github/workflows/security-lab.yml'
+jobs:
+  security-lab:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: security-lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact websocket package
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Test protocol and plugin security
+        run: npm test
