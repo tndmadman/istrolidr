@@ -67,6 +67,13 @@ try {
     if (-not (Test-Path -LiteralPath (Join-Path $export 'src/ai.js'))) {
         throw 'Missing extracted src/ai.js'
     }
+    $map = [IO.File]::ReadAllText((Join-Path $export '_source-map.json')) | ConvertFrom-Json
+    if (@($map).Count -ne 3) { throw 'Source map should list exactly three test sections.' }
+    $entry = @($map | Where-Object { $_.path -eq 'src/ai.js' })[0]
+    $actualHash = (Get-FileHash -LiteralPath (Join-Path $export 'src/ai.js') -Algorithm SHA256).Hash
+    if ($entry.sha256 -ne $actualHash.ToLowerInvariant() -or $entry.bytes -le 0) {
+        throw 'Exported module SHA-256 manifest did not match the file.'
+    }
     $modules = Join-Path $project 'modules'
     [IO.Directory]::CreateDirectory((Join-Path $modules 'src')) | Out-Null
     $aiOverride = Join-Path $modules 'src/ai.js'
