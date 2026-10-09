@@ -20,7 +20,19 @@ Or set environment variable `ISTROLID_GAME_DIR` to your installed game's folder.
 
 The original Steam installation is **not modified**. `.build/` is ignored by Git.
 
-## Make changes with Git
+## Edit an individual game system
+
+**You no longer need to edit the entire 1.72 MB combined JavaScript bundle.**
+
+1. Double-click **`Export-Sources.cmd`**. It performs a build and extracts 46 source sections into `.build/sources/` without committing proprietary files.
+2. Open `.build/sources/src/ai.js`, `src/sim.js`, `src/unit.js`, or `src/parts.js` to inspect the original module.
+3. Copy the file you want to modify into the matching Git-controlled `modules/` path. For example, copy `.build/sources/src/ai.js` to `modules/src/ai.js`.
+4. Edit your copy in `modules/`. **Keep the first `//from src/ai.js` marker intact.**
+5. Double-click **`Run-Istrolid.cmd`**. The launcher repacks the modified module into the local combined JS bundle and launches the game. The other 45 sections remain unchanged.
+
+Changes to `modules/` automatically trigger incremental rebuilds. Invalid module names and missing source markers fail with an error rather than silently producing a broken build. Use `Run-Istrolid.cmd -Clean` to regenerate everything. Only commit files you have the right to redistribute; `.build/sources/` is deliberately Git-ignored.
+
+### Other app files (HTML/CSS/Electron)
 
 Place modified or new files under `overrides/` mirroring their paths in the game's ASAR. Examples:
 
@@ -30,7 +42,7 @@ Place modified or new files under `overrides/` mirroring their paths in the game
 
 Double-click `Run-Istrolid.cmd` to apply the overrides and launch. Commit only independently authored files or files that you have permission to redistribute. Original unpacked assets and game code stay local in `.build/`.
 
-To inspect the unpacked source, start with `.build/IstrolidR/resources/app/js/istrolid.cat.js`. It retains many `//from src/...` source markers. See `RESEARCH.md` and `tools/split_bundle.py`.
+The original assembled bundle is at `.build/IstrolidR/resources/app/js/istrolid.cat.js`. Extracted modules and their `_source-map.json` are at `.build/sources/`. See [docs/SYSTEMS.md](docs/SYSTEMS.md) for the first source-backed game architecture map, and `RESEARCH.md` for the roadmap.
 
 ## What “build” means
 
