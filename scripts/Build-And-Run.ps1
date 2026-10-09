@@ -2,11 +2,12 @@
 param(
     [string]$GameDir = $env:ISTROLID_GAME_DIR,
     [switch]$Clean,
-    [switch]$BuildOnly
+    [switch]$BuildOnly,
+    [switch]$Offline
 )
 $ErrorActionPreference = 'Stop'
 $project = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$build = Join-Path $project '.build\IstrolidR'
+$build = Join-Path $project '.build\Istrolid'
 $overlay = Join-Path $project 'overrides'
 
 function Find-Game([string]$requested) {
@@ -94,6 +95,11 @@ foreach ($item in Get-ChildItem -LiteralPath (Join-Path $source 'resources') -Fo
 $asarInfo = Get-Item -LiteralPath $asarPath
 $stampLines = New-Object 'System.Collections.Generic.List[string]'
 $stampLines.Add("asar:$($asarInfo.Length):$($asarInfo.LastWriteTimeUtc.Ticks)")
+$stampLines.Add(('offline:' + [string]$Offline.IsPresent))
+if ($Offline) {
+    $patchScript = Join-Path $PSScriptRoot 'Apply-Offline.ps1'
+    $stampLines.Add(('offline-patch:' + (Get-FileHash -LiteralPath $patchScript -Algorithm SHA256).Hash))
+}
 if (Test-Path -LiteralPath $overlay -PathType Container) {
     foreach ($file in Get-ChildItem -LiteralPath $overlay -Recurse -File | Sort-Object FullName) {
         if ($file.Name -eq '.gitkeep') { continue }
@@ -140,6 +146,10 @@ if (($oldStamp -ne $stamp) -or -not (Test-Path -LiteralPath (Join-Path $appDir '
             Write-Host 'Applying individual JavaScript module overrides...'
             & $moduleTool -Bundle $bundle -ModulesDirectory $modules -OutputBundle $bundle
         }
+    }
+    if ($Offline) {
+        Write-Host 'Applying isolated offline sandbox patch...'
+        & (Join-Path $PSScriptRoot 'Apply-Offline.ps1') -ApplicationDir $stage
     }
     foreach ($needed in @('package.json', 'main.js', 'preload.js', 'game.html', 'js\istrolid.cat.js', 'css\style.css')) {
         if (-not (Test-Path -LiteralPath (Join-Path $stage $needed) -PathType Leaf)) {
